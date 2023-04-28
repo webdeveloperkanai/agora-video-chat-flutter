@@ -2,9 +2,11 @@
 
 import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_rtm/agora_rtm.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+// 5d999d1f624049f682f7436f0161c6e2
 import '../config.dart';
 
 class CallAttend extends StatefulWidget {
@@ -21,9 +23,33 @@ class _CallAttendState extends State<CallAttend> {
   bool _localUserJoined = false;
   late RtcEngine _engine;
 
+  AgoraRtmClient? _client;
+  AgoraRtmChannel? _channel;
+
+  Future<AgoraRtmChannel?> createChannel(String name) async {
+    AgoraRtmChannel? channel = await _client?.createChannel(name);
+    if (channel != null) {
+      channel.onMemberJoined = (AgoraRtmMember member) {
+        print('Member joined: ${member.userId}, channel: ${member.channelId}');
+      };
+      channel.onMemberLeft = (AgoraRtmMember member) {
+        print('Member left: ${member.userId}, channel: ${member.channelId}');
+      };
+      channel.onMessageReceived =
+          (AgoraRtmMessage message, AgoraRtmMember member) {
+        print("Channel msg: ${member.userId}, msg: ${message.text}");
+      };
+    } else {
+      print("Channel creation failed $channel");
+    }
+    print("xxxxxxxxxxxxxxxxx");
+    return channel;
+  }
+
   @override
   void initState() {
     super.initState();
+    createChannel(widget.channelId);
     initAgora();
   }
 
@@ -82,7 +108,7 @@ class _CallAttendState extends State<CallAttend> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 12, 14, 15),
+      backgroundColor: Color.fromARGB(255, 224, 237, 243),
       body: Stack(
         children: [
           Center(
